@@ -1,0 +1,7 @@
+Ref - https://aws.amazon.com/ec2/instance-types/
+
+General Purpose	ATM	ATM machine to withdraw
+Compute Optimized	C	Compute Optimized
+Accelerated Computing	P, G, F1	PG Formula 1
+Memory Optimized	R, z1d, X	Remember that X
+Storage Optimized	D, I, H	Design my House
