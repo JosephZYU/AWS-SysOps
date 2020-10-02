@@ -1,0 +1,42 @@
+🎬 https://www.youtube.com/watch?v=qE77MbDnljA&feature=youtu.be&t=685
+
+🌟 BONUS: 1 of 2 - upload and SSH into remote machine:
+    
+    🎬⏰ Linux/Mac Terminal Tutorial: How To Use The rsync Command - Sync Files Locally and Remotely
+    
+    💲 rsync -zaP /home/josephyu/Rsync/ -e "ssh -i /home/josephyu/WSL.pem" ec2-user@3.235.19.60:/home/ec2-user/public
+    
+        -z  Zip to compress the files
+        -a  Archive
+        -P  Show the progress of sync
+        -zaP    All in one-step
+        /home/josephyu/Rsync/   /path/to/local/sync/folder
+        -e "ssh -i "    Grants permission to write into remote instance
+        /home/josephyu/WSL.pem  /path/to/ssh/key
+        ec2-user@3.235.19.60    ec2-user@Public IPv4 address of EC2
+        /home/ec2-user/public/  /path/to/remote/sync/folder
+    
+
+    
+    📝 remote sync (Rsync) files to AWS EC2 ✅ 👍
+    
+    📝 remote sync (Rsync) files to AWS EC2  Ref-ONLY
+
+    💲 rsync -avz /home/josephyu/Rsync/ -e "ssh -i /home/josephyu/WSL.pem" ec2-user@3.235.19.60:/home/ec2-user/public/
+    
+    🔬 breakdown:
+    
+        Rsync   Hello, I want to use rsync!
+        -av the recursive rsync command.
+        /home/josephyu/Rsync/   /path/to/local/sync/folder
+        -e "ssh -i "    Grants permission to write into remote instance
+        /home/josephyu/WSL.pem  /path/to/ssh/key
+        ec2-user@3.235.19.60    ec2-user@Public IPv4 address of EC2
+        /home/ec2-user/public/  /path/to/remote/sync/folder
+    
+
+    
+    
+🌟 BONUS: 2 of 2 - download (and SSH) from remote machine:
+    
+    💲 rsync -zaP -e "ssh -i /home/josephyu/WSL.pem" ec2-user@3.235.19.60:/home/ec2-user/backups /home/josephyu/Rsync/
