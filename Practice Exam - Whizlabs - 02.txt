@@ -1,0 +1,700 @@
+Lambda functions:
+	• Re-useable templates
+	• Subsequent deployment in other AWS environments
+		○ CloudFormation
+
+OpsWork	Chef, Puppet, configuration management
+CloudFormation	Create template that describes all of the underlying resources - TEMPLATE
+CloudTrail	API calls, who did that, API monitoring
+Config	Point in time config settings
+
+
+Sys Admin:
+	• Custom VPC
+	• SG, NACL
+	• Traffic NOT reaching the instance
+	• Diagnose the issue
+		○ VPC Flow logs vs. CloudTrail logs
+		○ NOTE: VPC flow logs would NOT impact your performance at all! - such a great tool
+		○ 👀 VPC flow logs: traffic going BOTH to AND from network interfaces in your VPC
+		○ CloudTrail: API activities - which is enabled on your AWS Account when you create it - Account Level - NOT VPC level
+
+
+Private subnet in VPC:
+	• Download updates from Internet
+	• Minimal maintenance
+	• Minimal restriction on bandwidth
+		○ NAT gateway > NAT instance
+
+VPC:
+	• VPC peering connection
+		○ NOTE: your destination should always be your FINAL destination - not anywhere in between
+		○ VPC A - bound to VPC B as FINAL destination via peering connection ID
+		○ Likewise:
+		○ VPC B - bound to VPC A as FINAL destination via peering connection ID 
+		
+🌟 IAM Condition Keys:
+	• 4 VPC
+	• 1 & 2 for testing ✅
+	• 3 & 4 for production ⛔
+	• Dev Team - test new serverless we app with Lambda
+	• ONLY use VPC 1 & 2 for Lambda
+	• Nothing used in 3 & 4
+		○ Your goal is to block a whole team of users from Dev Team
+		○ 1st point - should we even consider IAM vs. function request
+			§ We should use IAM
+			§ IAM Condition keys to specify VPC to be used by Lambda function 🌩
+
+🏛 https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html#vpc-conditions
+
+
+
+IAM Condition keys can have fine-grained control for:
+	• VPC
+	• Subnets (within VPC)
+	• Security Groups (within VPC)
+		
+
+Effect: Deny ⛔
+Condition:
+	StringEquals:
+		Lambda: VpcIds: ["vpc-1", "vpc-2"] # BLOCK by VPC IDs 👀
+
+
+Sys Admin:
+	• View the contents of S3 bucket
+	• ONLY available for a limited amount of time ⏳
+	• How to control the access?
+		○ IAM Role ⛑ again!
+		○ Create IAM Role with a session duration parameter
+		○ Allow consultant (3rd party) to assume role with Duration Seconds parameter: 900 seconds max
+
+
+
+🏛 https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use.html#id_roles_use_view-role-max-session
+
+
+
+CLI or API operation to assume a Role ⛑, specify a value for the Duration Seconds parameter
+
+
+Static Web hosting:
+	• Root domain
+	• S3
+	• http:companya.com >> companya.com (pure and simple)
+	• NOTE: you can use your own domain! There is NO change at all 😎
+		○ Your web visitors can access your site from the browser by typing root domain DIRECTLY!
+	• 👀 S3 bucket naming convention:
+		○ NO upper case letter at all times A
+		○ NO underscore _
+		○ NO dash ending -
+	• The beauty of using S3 to host your web is BY not changing your host name and serve your client!
+	• If you have to change your domain name, nobody will be willing to host their private side on AWS
+
+Sensitive documents:
+	• Notified whenever change in S3
+		○ Set up S3 event notification
+		○ Create S3 topic
+
+⚡ S3 event notification + SNS topic == Notified ALL the time
+
+Hadoop clusters:
+	• On-prem
+	• Transfer to AWS
+		○ EMR = Elastic Map Reduce 
+			§ Great for BIG Data focus
+			§ Apache Hadoop or Apache Spark
+			§ Can even transform and move large data into and out of other AWS service E.g. S3 or DynamoDB
+
+
+⚡ Hadoop or Spark == EMR
+
+VPC connectivity:
+	• On-prem to AWS VPC
+	• Capture IP traffic, VPC Flow logs
+	• 🔬 Log:
+		○ From left to right: flow from 189 to 117
+		○ TCP vs. UDP protocol to host
+
+
+
+⚡ TCP vs. UDP protocol NO.
+
+TCP	Protocol: 6
+UDP	Protocol: 17 - YOU 😎
+
+
+Social media app:
+	• DynamoDB as backend Database
+	• RCU and WCU has been pre-defined
+	• Solve throttling requests during peak hours
+		○ Enable Auto Scaling for DynamoDB Table
+		○ 👀 SQS queue would NOT alleviate the problem - will ONLY delay the throttling - lead to unhappy customers 
+
+🏛 https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/AutoScaling.html
+
+
+
+🏛 https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html
+
+AWS Application Auto Scaling Service: is great for system admin for automatically scale their resources
+	• Aurora
+	• DynamoDB
+	• ECS
+	• EMR
+	• Lambda
+	• Kafka
+	• SageMaker
+
+As you can see, they are mostly NEW / Serverless / Big Data oriented services for with increasing agile Auto Scaling needs.
+
+Back to the point in DynamoDB, AWS App Auto Scaling service can increase its provisioned RCU, WCU to handle sudden spike in traffic without throttling
+
+😎 NOTE: even though your RCU and WCU have been pre-defined, we can still leverage this service (great for Admin) to handle scaling
+
+⚡ DynamoDB (pre-defined RCU and WCU >> Auto Scaling service
+
+🧐 Enable Autoscaling for DynamoDB is NOT the same as put them into an Auto Scaling Group!
+
+
+Restore volume from snapshot:
+	• EBS volume
+	• Initial I/O latency issue
+		○ Ensure ALL blocks restored from snapshots are accessed at least once == Initialization == pre-warming
+		○ The Key point here is whether it is a NEW empty volume or a "restored" volume which needs pre-warming for initialization
+		○ Make sure at least accessed once can ensure pre-warming process
+
+Change the underlying volume type would NOT alter the fact that it is restored COLD volume.
+
+⚡restored EBS volume > pre-warm initialization > accessed at least once 
+
+ VPC:
+	• Scan security vulnerabilities
+		○ Inspector == Security Vulnerability Assessment
+
+Conserve on costs for EC2:
+	• Shutdown instances NOT being used
+		○ CloudWatch alarm to shutdown instances 
+		○ 🛑 Alarm - billing alarm - budget breach - stop / terminate / shutdown instances - generally alarming activities 🛑
+		○ 
+		○ 👀 NOTE  - it does NOT only kill but also make it recover and reborn ✅
+		○ Create CloudWatch alarm based on certain metrics and then shutdown the instance based on the alarm
+			§ What metrics to shut down? - Average CPU Utilization ✅
+			§ 
+
+🏛 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/UsingAlarmActions.html#AddingTerminateActions
+
+
+
+Global Financial Firm:
+	• AWS Organization - multiple accounts
+	• Critical security alarms, notify from all these accounts
+	• Least efforts
+		
+
+⚡🧠 CloudWatch Rules must be enabled at ALL accounts & NOT at the OU levels
+	• CloudWatch Rules == ALL Accounts
+
+EC2 instance:
+	• Private subnet
+	• Kinesis streams
+		○ VPC Endpoint vs. Interface VPC Endpoint
+		○ Once the keyword Endpoint is enabled, NO need for internet: IGW, NAT ⛔
+
+⚡🧠 VPC Endpoint Gateway vs. Interface VPC Endpoint
+VPC Endpoint Gateway (*S3, DynamoDB ONLY)	ONLY used with S3 and DynamoDB service
+Interface VPC Endpoint (Regular)	Keep traffic between VPC and Kinesis Data streams from leaving the Amazon network
+
+Web app hosting:
+	• Scale to millions of requests per second
+		○ Recall: ECS Cluster - Elastic Container Service - Docker Container 🐋
+		○ Network LB == Extreme high performance, millions of requests per second
+		○ Support static IP addresses
+
+⚡ millions of requests / static IP address >> Network Load Balancer Extreme Performance 
+
+DynamoDB table:
+	• Relevant permissions to access the DynamoDB
+		○ ⛑ IAM Role with required permissions and ensure that the Role is assigned to the EC2 instance
+
+⚡ EC2 instance, IAM Role, required permissions
+
+Sys Admin:
+	• Audit
+	• Recorded API activities
+	• CloudTrail
+
+Chef, Puppet >> OpsWork
+
+Web app:
+	• Specific IP address should be BLOCKED
+	• NACL is the service to DENY - BLOCK
+	• /32 is the way to target specific IP address
+
+
+⚡ 24 x 7 is a trick - access to customer service for ALL plans
+
+Keyword: Business hours == Developer (the very basic plan)
+
+Reports on memory usage:
+	• Dashboards
+	• Continuous basis
+		○ Ensure CloudWatch monitoring scripts are installed on Linux
+		○ What about Config tool?
+		
+
+
+
+🌟 CloudWatch Agent 👷‍♂️:
+	• New - Recommended 👍
+	• Multi-platform: Windows & Linux
+	• Single agent to collect: AWS & On-prem
+	• Comprehensive: primary & sub-resource metrics (E.g. per-CPU core)
+
+😎 Exam Tips: 
+	• Look for CloudWatch Agent option first
+	• If NOT, choose CloudWatch custom scripts for Linux
+	
+🧠 AWS Config Tool: Windows 🆚 CloudWatch Agent: multi platform
+
+Usage costs 💲
+	• Current set of instances and also clear forecast
+		○ Cost and Usage Explorer 👍 NEW
+		○ Current Report + Forecast 
+
+
+Private subnet in VPC:
+	• Instance status check has failed
+	• Try rebooting the instance ✅
+	• Rebooting the instance or by making modifications in your operating system
+	• BOTH SG and NACL will NOT affect your status check - they are for traffic flow control - NOT for status check
+
+VPC:
+	• Access cloud using keys
+	
+⚡ Keys: recall - CLI & API - double access Keys
+
+Public Key + Private Key = Key Pairs
+
+Public Key	Created and placed on EC2 instances	Created at boot time
+Private Key	Used to log into the Instances	For you to apply instead of password
+
+
+Storage gateway:
+	• Encrypted at rest 🔐
+	• Why not your own master keys to encrypt?
+	• X.509 certificate - IoT devices
+	• SSL certificate == In-Transit
+	• Can NOT use your own master key for Storage Gateway - ONLY the KMS 👑
+
+⚡🧠 Storage Gateway can ONLY be encrypted with AWS KMS to support encryption
+
+There is NO other options (hint: ONLY the king 👑 - KMS can walkthrough the Gateway)
+
+Redshift:
+	• Data warehousing, management analytics, huge quantity
+	• Must be via VPC
+		○ ONLY via VPC == Redshift Enhanced VPC routing - does it ONLY apply to Redshift or other service? - YES - Redshift ✅
+
+⚡ Redshift VPC only transfer == Enhanced VPC Routing
+		
+On-prem environment:
+	• Docker Container, ECS
+	• NO underlying infra management
+
+👀 The word "Infrastructure" does NOT guarantee CloudFormation, although it mostly can be the case
+
+⚡🧠 ABCD - EBCD - Elastic Beanstalk Container Docker 
+
+(Fargate - serverless)
+
+Elastic Beanstalk supports the deployment of web app from Docker Container:
+
+Hit the bottleneck for on-prem:
+	• Store files in S3
+	• NFS vs. EFS file system
+		○ NFS + S3 integration to your on-prem == File Gateway
+		○ EFS: cloud native NFS
+		○ 
+		
+
+ElastiCache - Caching - memory:
+	• Big & Strong for caching:
+		○ Use larger cache node type
+		○ Add more cache nodes
+	• Do NOT apply ELB or ASG
+
+
+Config team collection info:
+	• Software installed
+	• Easy way
+		○ List of software installed ⚙ == Systems Manager 
+
+⚡🧠 List of software installed ⚙ == Systems Manager 
+
+(hint: software installed - System - System Manger)
+
+
+Config Tool	Check for configuration changes in resources - NOT for actual software installed
+Systems Manger	Retrieve the list of software being installed ⚙
+EC2 dashboard	NO info
+CloudWatch (agent)	Get logs and metrics from CloudWatch - NOT software installed
+
+Impaired status:
+	• Go back to original status
+		○ Recall our CloudWatch Alarms 
+			§ Stop
+			§ Terminate
+			§ Reboot
+			§ Recover
+⚡ EC2 instances - Stop / Terminate / Recover / Reboot == CloudWatch Alarm
+
+
+Sys Admin:
+	• VPC CIDR 10.0.0.0/16 0 web app
+	• SSH into 
+	• 👀 Port 22 vs. 80
+		○ Port 22: SSH
+		○ Port 80: HTTP
+		○ Port 443: HTTPS
+	• Inbound 0.0.0.0/0 everywhere 🆚 
+
+Large MNC:
+
+	• Existing AD to authenticate
+		○ The user is authenticated by Ad ✔
+		○ Based on group membership, identity provider forwards SAML response to AWS STS
+		○ Using STS AssumeRoleWithSAML
+		○ The user is provided temporary credentials for max 1 hour
+		
+		
+		
+⚡🧠 SAML 2.0 + Max 1 hour == Authenticated by AD
+
+DynamoDB Table:
+	• Protected and recoverable in case of accentual write or delete operations
+	• Point-in-time recovery feature
+		○ Point in time recovery feature
+
+⚡point in time recovery feature >> protect from accidental write or delete operations
+
+DynamoDB table:
+	• Monitoring reports
+	• How much read and write capacity being used
+		○ CloudWatch metrics to see the amount of Read and Write capacity
+
+⚡ CloudWatch metrics 🆚 CloudTrail logs
+
+S3
+	• Compliance regulations
+	• Replicated from one bucket into another region
+	• Sys admin
+		○ Must have versioning enabled ✔
+		○ Must be in different Regions ✔
+
+⚡ Versioning must be enabled
+
+2 accounts:
+	• Dev Account - Developers push code from Dev to Prod
+	• Prod Account
+	• Limited tmp access?
+		○ Create a cross account role and share the ARN for the role
+		
+
+⚡ create cross account role and share the ARN == share limited tmp access between different team / group
+
+Health check system :
+	• Continuous check health of on-prem
+	• Switch over to a static web site in AWS
+		○ Use Route 53 Health Checks to failover to the secondary site if the on-premise web server has issues
+
+⚡🧠 On-premise failover to AWS >> Use Route 53
+
+Set of images:
+	• S3
+	• Better user experience around the world
+	• CloudFront - OAI
+	• Issue - bypassing the CloudFront
+		○ Must enable OAI - Origin Access Identity
+		○ NOTE: your users are generally NOT IAM users!
+		○ Let them use your CloudFront origin to read objects from S3
+
+⚡ OAI + Ensure ONLY CloudFront origin has access to read objects from the S3 buckets
+
+EC2:
+	• Private subnet 10.0.1.0/24
+	• Download from HTTPS from the internet
+	• NAT - public subnet
+	• Incoming rule to SG for the NAT
+		○ Incoming (from the NAT - bastion host) 10.0.1.0/24 on port 443
+		○ Outgoing 0.0.0.0/0 on port 443
+
+⚡ Symmetric:
+	• Incoming: Nat
+	• Outgoing: Internet
+
+App in AWS:
+	• General purpose workload app
+	• Cost effective instance
+	• Spikes in app
+		○ 👀 Burstable performance is NOT configurable - you can NOT change / edit burstable performance
+		○ T2.micro + T2 unlimited == balance of cost and spikes
+
+⚡🧠
+	• 👀 Burstable performance is NOT configurable - you can NOT change / edit burstable performance
+	• T2.micro + T2 unlimited == balance of cost and spikes
+
+Hosting a batch process:
+	• Spin up - accelerated speed up
+		○ Memory 🆚 Compute optimized
+
+⚡🧠 EC2 spin up == Elastic Compute 2 speed up == Compute Optimized
+
+
+Set of instance:
+	• In EU region
+	• In another region for disaster recovery
+		○ Make an AMI of EC2 instance
+		○ Copy the AMI to the destination region
+	• ✅ what about snapshot 🆚 AMI: AMI == AMI is the total package (Encrypted Snapshot)
+
+⚡ Make AMI + Copy AMI == to another region
+
+System Admin:
+	• VPC setup public and private subnet
+	• NAT gateway
+	• Private subnet
+		○ In the main route table: 
+			§ Add 0.0.0.0/0 and NAT gateway ID
+		○ In the custom route table:
+			§ Add 0.0.0.0/0 and Internet gateway ID
+		○ 
+
+⚡🧠
+
+Custom Route Table: Internet Gateway ID - Public subnet (use custom RT with Public subnet to face Internet directly)
+
+Main Route Table: Nat Gateway ID - Private subnet (use Main RT in the private subnet for better security)
+
+
+RS instance:
+	• Backup
+	• Easy solution
+		○ SNS Topic + RDS Events service
+			§ What is RDS Events service
+			§ RDS uses SNS to provide notifications when Amazon RDS event occurs
+			§ 
+			
+			§ 
+		○ CloudWatch metrics + Lambda (will more likely be the convention)
+
+
+⚡🧠 RDS uses SNS to provide notifications when Amazon RDS event occurs
+
+
+Financial firm:
+	• S3 bucket - critical documents
+	• Annual audit - non-maintaining access logs
+	• SysOps admin - enable S3 server access logs for all these buckets
+		○ Source & Target bucket must be DIFFERENT!
+			§ Otherwise the logs will increase exponentially >> disaster
+		○ Both buckets in the same region
+
+
+⚡ S3 log bucket: different buckets + same region
+
+
+Redshift cluster:
+	• In EU region
+	• In another region in case of any issues occur
+		○ Copy a snapshot of the cluster to another region
+		○ 
+		○ Automatically copy snapshots for a cluster to another region
+		○ Storing a copy of your snapshot in another region - can restore your cluster from recent data
+	• ✅ Can Redshift (data warehouse) even be able to have Multi-AZ or Read Replica? - NO
+		○ Multi-AZ and Read Replica are ONLY concepts of RDS (Database - much smaller than Data Warehouse)
+
+
+⚡🧠 
+
+Multi-AZ and Read Replica are concepts related to RDS ONLY (NOT Redshift)
+
+Global Tables: DynamoDB
+
+System Admin:
+	• Thousands of EC2
+	• Ensure ALL servers do NOT have critical security flaws
+		○ Inspector: security assessment vulnerability (critical flaws)
+		○ SSM: patch servers
+
+⚡🧠
+
+	• Inspector: security assessment vulnerability (critical flaws)
+	• SSM: patch servers
+	
+
+VPC:
+	• CIDR 10.0.0.0/16
+		○ 😎 IF the "Total" CIDR is limited to 10.0.0.0/16 - DO NOT touch the first 2 digits - start on the 3rd digits with 1
+
+	• Internet: 0.0.0.0/0
+
+	• Public sub: 10.0.2.0/24 - NAT instance SG
+	• Web server in the public subnet on port 80 - HTTP
+
+	• Private sub: 10.0.1.0/24
+	• Database server in the private sub on port 3306 - ❓ what is port 3306
+
+	• 
+		
+	• Inbound allow Source: 10.0.1.0/24 on port 80 should be OPEN for private subnet where the DB server to access Internet via NAT instance
+	• Outbound allow Destination on port 443: on secure port 443 - HTTPS - allow update the patch
+
+	• 
+
+	• The destination should be Internet - NOT the private subnet
+
+
+SysOps:
+	• S3 bucket without any object level policy
+	• Block public access settings to all S3 buckets
+		○ Amazon S3 applies restrictive combination of bucket level & account level setting to all regions globally which applies to all current & future buckets
+		○ block public access settings can be applied at bucket level or account level
+			§ Restrictive combination of both setting is applied to all current and future buckets created in that account
+			§ Prevents users from creating any S3 bucket which is publicly accessible unless explicitly allowed
+
+	• Amazon S3 applies restrictive combination of bucket level & account level settings 
+
+
+⚡🧠 Amazon S3 applies restrictive combination of bucket level & account level setting to all regions globally which applies to all current & future buckets
+
+All regions & All current + future buckets
+
+
+CloudFormation templates:
+	• Sender throttling rate exceeded
+	• Add an exponential back off between the calls to the create Stack API
+
+⚡ Throttling rate exceeded == Exponential back off
+
+New app:
+	• Test the app
+	• Performance test
+	• The team needs to go to the IT admin team to request new
+		○ Create an Autoscaling Group and Launch configuration
+		○ Ensure the ASG creates new instances based on instance utilization
+	• The answers are straight forward, but what about Target group in the load balancer?
+		○ In this case, nothing to do with Load Balancer
+
+⚡ performance test >> ASG! ASG!
+
+
+Audit company:
+	• Audit of infra
+	• Types of security procedures are implemented at the data centers
+		○ AWS Artifact
+
+⚡ AWS Artifact >> compliance / audit / show your report 
+
+App to production:
+	• Web server
+	• MySQL database in RDS
+	• 10 days - dropped - asap retrieve within 5 mins
+		○ Multi-AZ RDS 🆚 RDS Automated Backup
+
+
+⚡🧠
+
+Restore database within 5 mins (restore from backup)	RDS Automated Backup
+Auto failover during disaster recovery	RDS Multi-AZ
+
+
+VPC:
+	• Higher bandwidth
+	• Higher packet per second
+		○ Use instance type support Enhanced Networking
+
+⚡🧠 
+
+High throughput (between instances)	Placement Groups
+Better Performance	EBS optimized volumes
+High bandwidth	Enhanced Networking
+Static IP addressing	Elastic IP address
+
+
+S3 to store critical data
+	• Does NOT impact user
+	• Protect against deletion
+		○ Versioning
+		○ MFA
+
+⚡ Versioning + MFA == Best of both worlds (does not impact user + protect accentual deletion)
+		
+ASG:
+	• EC2 instance for an app
+	• Issues in the app
+	• Debug
+		○ Suspend the scaling process so that you can carry out the investigation on the underlying instances
+		○ Suspend and then resume one or more of the scaling processes for your ASG
+		○ Make changes to your app without invoking the scaling processes
+		○ Administrative suspension
+		○ You should NOT delete either ASG or Launch configuration
+
+⚡suspend the scaling process, stop / investigate, and then resume ✅
+
+
+Digital policy files
+	• Admin for verification
+	• May not required in the future - can be eliminated
+	• Best Cost-effective option == Glacier
+
+
+
+Web server with ASG & ALB
+	• Capture all traffic flowing: client and web server
+	• Enable access logs on ALB
+	• Uncertain of traffic captured by enabling this log
+		○ Access logs entries for ALB
+		○ It does NOT log health check requests from ALB to target group
+
+ALB access logs consist of ALL request which are not forward to targets BUT not the health check request which ALB periodically sends to target group
+
+
+
+Does NOT log health check requests
+
+⚡ Health care record are private - does NOT log health requests from Alb to target group
+
+
+Organization
+	• Prod roll out
+	• Automation for deployment
+	• LAMP stack
+		○ CloudFormation 🆚 Elastic Beanstalk
+		○ EB - web app made easy
+
+Set of Developers
+	• CSV
+	• Query data directly from S3: Athena
+
+Performance-sensitive
+	• You should barely choose instance store unless explicitly mentioned! DO NOT over think
+	• EBS optimized + 10 GB network connectivity
+
+⚡ Higher Connectivity + EBS (Block Storage)
+		
+
+Disaster recovery procedure
+	• Automation process
+	• Automate the process of keeping updated copies of their EBS volume snapshots
+		○ Lambda vs. Config
+
+
+⚡🧠
+
+Lambda is great for process automation with activities 🌩
+
+Lambda	Automate the process (of keeping updated copies)
+API Gateway	Manage APIs
+CloudTrail	AIP logging
+Config	Configuration management
